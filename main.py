@@ -55,7 +55,7 @@ def stream():
 		try:
 			while True:
 				try:
-					payload = q.get(timeout=30)
+					payload = q.get(timeout=1)
 				except queue.Empty:
 					yield ':\n\n'
 					continue
