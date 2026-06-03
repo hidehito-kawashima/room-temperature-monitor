@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset = "UTF-8">
+	<meta name = "viewport" content="width=device-width,initial-scale=1.0">
+	<title> 温度・湿度　表示 </title>
+	<link rel="stylesheet" href="{{ url_for('static', filename = 'browseondo.css')}}">
+</head>
+<body>
+
+	<main class="container">
+		<header class = "title"> 温度・湿度　測定</header>
+		
+		<section class="card">
+		<div class="meta">
+			<div class = "date">
+			<span id="date">{{date}}</span> &nbsp;
+			<span id = "time" class="time">{{jikoku}}</span></div>
+		<div class = "reaedings">
+		<div class = "reading">温度 : <span id="temp" class = "value">{{ temp }} </span> ℃</div>
+		<div class = "reading"> 湿度 : <span id="hum" class="value">{{ hum }}</span> %</div>
+		</div>
+		</div>
+	</section>
+	</main>
+	
+	<script>
+	(function(){
+		const API = window.location.origin + '/api';
+		const STREAM = window.location.origin + '/stream';
+		
+		function setIf(id, val){
+			const el = document.getElementById(id);
+			if(!el) return;
+			if(val === undefined || val === null || val ==='') {
+				el.textContent = '--.-';
+				return;
+			}
+			el.textContent = val;
+		}
+			
+		let clientOffsetMs = 0;
+		function nowJST(msOffset = 0){
+			const d = new Date(Date.now() + msOffset);
+			const opts = { timeZone: 'Asia/Tokyo', hour12: false};
+			const date = d.toLocaleDateString('ja-JP', opts);
+			const time =d.toLocaleTimeString('ja-JP',opts);
+			return {date,time};
+		}
+		function tickClientTime(){
+			const t = nowJST(clientOffsetMs);
+			setIf('date',t.date.replace(/\//g,'/'));
+			setIf('time',t.time);
+		}
+		async function fetchSensors(){
+			try{
+				const res = await fetch(API, {cache: 'no-store' });
+				if (!res.ok) throw new Error('HTTP ' +res.status);
+				const j = await res.json();
+				setIf('temp', j.temp);
+				setIf('hum',j.hum);
+			}catch(e){
+				console.error('fetchSensors error',e);
+				setIf('temp', null);
+				setIf('hum', null);
+			}
+		}
+		fetchSensors();
+		tickClientTime();
+		setInterval(fetchSensors, 1000);
+		setInterval(tickClientTime,1000);
+	})();
+	</script>
+</body>
+</html>
+	
