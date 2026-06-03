@@ -1,0 +1,2 @@
+# room-temperature-monitor
+Raspberry PiとBME280センサーを使用した研究室向けのリアルタイム温湿度監視システム。FlaskによるWeb通信とTkinterの大画面表示、I2C LCDへの出力を統合。1秒周期の同期タイマーによる、負荷を抑えた低遅延なリアルタイム表示をWebとローカル双方で実現しています。
