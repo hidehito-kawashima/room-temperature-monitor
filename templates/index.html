@@ -67,8 +67,22 @@
 		}
 		fetchSensors();
 		tickClientTime();
-		setInterval(fetchSensors, 1000);
 		setInterval(tickClientTime,1000);
+		const eventSource = new EventSource(STREAM);
+		
+		eventSource.onmessage = function(event) {
+			try {
+				const data = JSON.parse(event.data);
+				setIf('temp', data.temp);
+				setIf('hum', data.hum);
+			} catch(e) {
+				console.error("SSE data parsing error:", e);
+			}
+		};
+		
+		eventSource.onerror = function(e) {
+			console.error("SSE connection error. Attempting to reconnect...", e);
+		};
 	})();
 	</script>
 </body>
