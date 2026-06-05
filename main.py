@@ -150,7 +150,7 @@ if __name__ == '__main__':
 		
 	try:
 		if not getattr(humidity, '_started_by_main', False):
-			humidity.start(poll_interval=5)
+			humidity.start(poll_interval=1)
 			try:
 				setattr(humidity, '_started_by_main', True)
 			except Exception:
