@@ -163,7 +163,7 @@ if __name__ == '__main__':
 	time.sleep(0.2)
 	if args.browser:
 		try:
-			webbrowser.open('http://127.0.0.1:{args.port}')
+			webbrowser.open(f'http://127.0.0.1:{args.port}')
 		except Exception:
 			pass
 	
