@@ -51,29 +51,29 @@ def api():
 
 @app.route('/stream')
 def stream():
-	def gen(q):
-		try:
-			while True:
-				try:
-					payload = q.get(timeout=1)
-				except queue.Empty:
-					yield ':\n\n'
-					continue
-				yield f"data: {payload}\n\n"
-		except GeneratorExit:
-			pass
-			
-	q = queue.Queue()
-	with _client_lock:
-		_client_queues.append(q)
-	try:
-		return Response(gen(q), mimetype='text/event-stream')
-	finally:
-		with _client_lock:
-			try:
-				_client_queues.remove(q)
-			except ValueError:
-				pass
+    def gen():
+        q = queue.Queue()
+        with _client_lock:
+            _client_queues.append(q)
+            
+        try:
+            while True:
+                try:
+                    payload = q.get(timeout=1)
+                except queue.Empty:
+                    yield ':\n\n'
+                    continue
+                yield f"data: {payload}\n\n"
+        except GeneratorExit:
+            pass
+        finally:
+            with _client_lock:
+                try:
+                    _client_queues.remove(q)
+                except ValueError:
+                    pass
+                    
+    return Response(gen(), mimetype='text/event-stream')
 				
 def _broadcast_to_clients(temp, hum):
 	data = json.dumps({"temp": None if temp is None else round(temp,1),"hum": None if hum is None else round(hum, 1)})
@@ -98,10 +98,10 @@ def _on_sensor_change(temp,hum):
 		except Exception as e:
 			print("lcd update error:", e)
 		
-		try:
-			_broadcast_to_clients(temp, hum)
-		except Exception as e:
-			print("broadcast error:", e)
+	try:
+		_broadcast_to_clients(temp, hum)
+	except Exception as e:
+		print("broadcast error:", e)
 				
 def _cleanup_and_exit(signum = None, frame = None):
 	print('Received signal {}, cleaning up...'.format(signum))
@@ -138,7 +138,6 @@ if __name__ == '__main__':
 	parser.add_argument('--browser', action='store_true', help='Open browser on start')
 	parser.add_argument('--no-monitor', action='store_true', help='Do not show Tk monitor')
 	parser.add_argument('--port', type=int , default=5000,help='Flask port')
-	parser.add_argument('--debug', action='store_true',help='Flask debug')
 	args = parser.parse_args()
 	_args=args
 	
@@ -158,7 +157,7 @@ if __name__ == '__main__':
 	except Exception as e:
 		print('warning: humidity.start() failed:', e)
 			
-	flask_thread = threading.Thread(target=_run_flask_thread, kwargs={'host':'0.0.0.0','port':args.port,'debug':args.debug},daemon = True)
+	flask_thread = threading.Thread(target=_run_flask_thread, kwargs={'host':'0.0.0.0','port':args.port,'debug':False},daemon = True)
 	flask_thread.start()
 	time.sleep(0.2)
 	if args.browser:
